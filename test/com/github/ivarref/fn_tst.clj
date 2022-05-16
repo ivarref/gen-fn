@@ -1,4 +1,4 @@
-(ns com.github.ivarref.fn-test
+(ns com.github.ivarref.fn-tst
   (:require [clojure.test :refer [use-fixtures deftest is]]
             [datomic.api :as d]
             [com.github.ivarref.gen-fn :as gen-fn]
