@@ -1,6 +1,7 @@
 (ns com.github.ivarref.gen-fn
   (:require [datomic.api]
             [rewrite-clj.zip :as z]
+            [rewrite-clj.node :as n]
             [clojure.edn :as edn]
             [clojure.java.io :as io]))
 
@@ -111,26 +112,27 @@
                                *print-namespace-maps* false]
                        (pr-str db-fn))
                      "}")]
+    (println out-str)
     out-str))
 
 
-(defn patch-string [generated-string db-fn-name fn-str]
-  (let [patched-value (-> (z/of-string generated-string)
+(defn patch-string [gen-str db-fn-name fn-str]
+  (let [patched-value (-> (z/of-string gen-str)
                           (z/find-value z/next 'def)
                           (z/right)
                           (z/right)
-                          (z/assoc db-fn-name fn-str)
-                          (z/find-value z/next db-fn-name))]
-    (def p patched-value)
-    (if (or
-          (nil? (z/left* patched-value))
-          (and (z/whitespace? (z/left* patched-value))
-               (z/whitespace? (z/left* (z/left* patched-value)))))
-      (z/root-string patched-value)
-      (-> patched-value
-          (z/insert-newline-left)
-          (z/insert-space-left 16)
-          (z/root-string)))))
+                          (z/replace fn-str)
+                          #_(z/find-value z/next db-fn-name))]
+    (z/root-string patched-value)
+    #_(if (or
+            (nil? (z/left* patched-value))
+            (and (z/whitespace? (z/left* patched-value))
+                 (z/whitespace? (z/left* (z/left* patched-value)))))
+        (z/root-string patched-value)
+        (-> patched-value
+            (z/insert-newline-left)
+            (z/insert-space-left 16)
+            (z/root-string)))))
 
 (defonce lock (Object.))
 
@@ -138,7 +140,10 @@
   (assert (var? fn-var) "fn-var must be variable")
   (assert (keyword? db-fn-name) "db-fn-name must be keyword")
   (assert (string? output-file) "output-file must be a string")
+  (spit output-file
+        "(ns com.github.ivarref.generated\n  (:require [clojure.edn :as edn]\n            [datomic.api]))\n\n(def generated {})\n\n(def schema\n  (mapv (fn [s]\n          (edn/read-string\n            {:readers {'db/id  datomic.db/id-literal\n                       'db/fn  datomic.function/construct}}\n            s))\n        (vals generated)))")
   (let [fn-str (file-str->datomic-fn-str (var->file-str fn-var) db-fn-name)]
     (locking lock
       (let [org-file (slurp output-file)]
-        (spit output-file (patch-string org-file db-fn-name fn-str))))))
+        (println (patch-string "(ns com.github.ivarref.generated\n  (:require [clojure.edn :as edn]\n            [datomic.api]))\n\n(def generated {})\n\n(def schema\n  (mapv (fn [s]\n          (edn/read-string\n            {:readers {'db/id  datomic.db/id-literal\n                       'db/fn  datomic.function/construct}}\n            s))\n        (vals generated)))"
+                               db-fn-name fn-str))))))

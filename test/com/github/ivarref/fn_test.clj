@@ -77,20 +77,3 @@
   (transact! [{:e/id "a" :e/res 1}])
   (transact! [[:my-add [:e/id "a"] :e/res 2]])
   (is (= 3 (attr :e/res [:e/id "a"]))))
-
-(comment
-  (do
-    (ns clojure.core)
-
-    (defn pp [x]
-      "like let, but binds the expressions globally."
-      (clojure.pprint/pprint x)
-      x)))
-#_(defn my-fn [db]
-    (println "hello world"))
-
-#_(comment
-    ((requiring-resolve 'com.github.ivarref.gen-fn/generate-function)
-     #'my-fn
-     :my-fn
-     (requiring-resolve 'com.github.ivarref.generated/generated)))
