@@ -29,8 +29,7 @@
 (defn read-dbfn [s]
   (edn/read-string
     {:readers {'db/id  datomic.db/id-literal
-               'db/fn  datomic.function/construct
-               'base64 datomic.codec/base-64-literal}}
+               'db/fn  datomic.function/construct}}
     s))
 
 (defn fn-remove-docstring [fn-def]
@@ -53,9 +52,9 @@
     (throw (ex-info "No :file for variable" {:var v}))))
 
 
-(defn file-str->datomic-fn-str [clj-file-str fn-db-name]
+(defn file-str->datomic-fn-str [clj-file-str db-fn-name]
   (assert (string? clj-file-str) "clj-file-str must be string")
-  (assert (keyword? fn-db-name) "fn-db-name must be keyword")
+  (assert (keyword? db-fn-name) "db-fn-name must be keyword")
   (let [fil (z/of-string clj-file-str)
         requires (-> fil
                      (z/find-value z/next 'ns)
@@ -102,7 +101,7 @@
                :imports  (vec (drop 1 imports))
                :params   params
                :code     code}
-        out-str (str "{:db/ident " fn-db-name
+        out-str (str "{:db/ident " db-fn-name
                      " :db/fn #db/fn "
                      (binding [*print-dup* false
                                *print-meta* false
@@ -142,7 +141,4 @@
   (let [fn-str (file-str->datomic-fn-str (var->file-str fn-var) db-fn-name)]
     (locking lock
       (let [org-file (slurp output-file)]
-        (spit output-file (patch-string org-file db-fn-name fn-str)))))
-
-
-  #_(let [(requiring-resolve fn-var)]))
+        (spit output-file (patch-string org-file db-fn-name fn-str))))))
