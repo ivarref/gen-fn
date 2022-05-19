@@ -45,9 +45,6 @@ Add a new namespace containing the function you would like to create:
 
 Let's write this function to the `generated` namespace: 
 ```clojure
-(require '[rewrite-clj.zip :as z])
-(-> (z/of-string "{}") (z/assoc :demo "\"quoted\"") (z/root-string))
-
 (require '[com.github.ivarref.gen-fn :refer [gen-fn!]])
 (require '[com.github.ivarref.my-add :refer [my-add]])
 
