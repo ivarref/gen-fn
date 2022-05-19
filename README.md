@@ -55,12 +55,13 @@ Let's write this function to the `generated` namespace:
 
 You can now see the following contents in the generated namespace (some formatting added):
 ```clojure
-(def generated {:my-add "{:db/ident :my-add 
-:db/fn #db/fn {:lang \"clojure\", 
+(def generated {:my-add "
+{:db/ident :my-add 
+ :db/fn #db/fn {:lang \"clojure\", 
                :requires [[datomic.api :as d]], 
                :imports [], 
                :params [db e a v], 
-:code (let [] 
+ :code (let [] 
         (letfn [(curr-val [db e a] (do (d/q (quote [:find ?v . 
                                                    :in $ ?e ?a 
                                                    :where [?e ?a ?v]])
@@ -96,3 +97,4 @@ the following if you'd like to avoid a hard dependency on generated files:
 
 ### Tips and tricks: fressian serialization and deserialization
 
+One thing that may bite you in the foot 
