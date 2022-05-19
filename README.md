@@ -98,7 +98,7 @@ the following if you'd like to avoid a hard dependency on generated files:
 ### Tips and tricks: fressian serialization and deserialization
 
 One thing that may surprise you is that parameters may be 
-slightly different in an in-memory transactor and on a remote transactor.
+slightly different on an in-memory transactor and on a remote transactor.
 This is due to tx-data being serialized and deserialized using
 [fressian](https://github.com/Datomic/fressian) only when using
 a remote transactor.
