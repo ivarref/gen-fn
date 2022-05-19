@@ -16,7 +16,9 @@ It will contain the generated Datomic function literals.
   (:require [clojure.edn :as edn]
             [datomic.api]))
 
+; Generated code below, do not edit:
 (def generated {})
+; End of generated code
 
 (def schema
   (mapv (fn [s]
