@@ -62,12 +62,12 @@ You can now see the following contents in the generated namespace (formatting ad
                :requires [[datomic.api :as d]], 
                :imports [], 
                :params [db e a v], 
- :code (let [] 
-        (letfn [(curr-val [db e a] (do (d/q (quote [:find ?v . 
-                                                   :in $ ?e ?a 
-                                                   :where [?e ?a ?v]])
-                                                   db e a)))]
-           (do [[:db/add e a (+ (curr-val db e a) v)]])))}}"})
+               :code (let [] 
+                        (letfn [(curr-val [db e a] (do (d/q (quote [:find ?v . 
+                                                                   :in $ ?e ?a 
+                                                                   :where [?e ?a ?v]])
+                                                                   db e a)))]
+                           (do [[:db/add e a (+ (curr-val db e a) v)]])))}}"})
 ; End of generated code
 ```
 
