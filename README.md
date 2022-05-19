@@ -74,7 +74,7 @@ You can see that:
 * The last `defn` is used as the main body.
 * Other `defn`s are inlined using `letfn`.
 * `defn` bodies are wrapped in `do` in case you need side effects for debugging.
-* `def`s are inlined in the top `let`. No `def`s are used in the example namespace, thus this top `let` is empty.
+* `def`s are inlined in the top `let`. No `def`s are used in the example namespace, thus the top `let` is empty.
 
 ## Test and development usage
 
