@@ -4,4 +4,3 @@ target/
 *.iml
 .cpcache/
 .nrepl-port
-test/com/github/ivarref/generated.clj
