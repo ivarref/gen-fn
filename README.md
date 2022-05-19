@@ -53,7 +53,7 @@ Let's write this function to the `generated` namespace:
 (gen-fn! :my-add #'my-add "test/com/github/ivarref/generated.clj")
 ```
 
-You can now see the following contents in the generated namespace (some formatting added):
+You can now see the following contents in the generated namespace (formatting added):
 ```clojure
 (def generated {:my-add "
 {:db/ident :my-add 
