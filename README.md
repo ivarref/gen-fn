@@ -125,7 +125,7 @@ How I usually solve this problem is by converting all parameters
 to proper Clojure types:
 
 ```clojure
-(ns ...
+(ns my-db-fn
   (:require [clojure.walk :as walk])
   (:import (java.util HashSet List)))
 
@@ -153,7 +153,6 @@ to proper Clojure types:
     (to-clojure-types e)
     (to-clojure-types arg)))
 ```
-
 
 ## Change log
 
