@@ -132,9 +132,11 @@
             (z/insert-space-left 16)
             (z/root-string)))))
 
+(defn datomic-fn [db-fn-name fn-var])
+
 (defonce lock (Object.))
 
-(defn gen-fn! [fn-var db-fn-name output-file]
+(defn gen-fn! [db-fn-name fn-var output-file]
   (assert (var? fn-var) "fn-var must be variable")
   (assert (keyword? db-fn-name) "db-fn-name must be keyword")
   (assert (string? output-file) "output-file must be a string")
