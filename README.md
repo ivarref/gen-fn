@@ -81,7 +81,7 @@ You can see that:
 One advantage of writing Datomic database functions using regular Clojure
 code is that you may test them using plain Clojure.
 
-If however you'd like to test the function in an actual database setting, you may use
+If however you'd like to test the function in an actual transaction, you may use
 the following if you'd like to avoid a hard dependency on generated files:
 
 ```clojure
@@ -97,4 +97,47 @@ the following if you'd like to avoid a hard dependency on generated files:
 
 ### Tips and tricks: fressian serialization and deserialization
 
-One thing that may bite you in the foot 
+One thing that may surprise you is that parameters may be 
+slightly different in an in-memory transactor and on a remote transactor.
+This is due to tx-data being serialized and deserialized using
+[fressian](https://github.com/Datomic/fressian) only when using
+a remote transactor.
+
+An example of this difference (using [data.fressian](https://github.com/clojure/data.fressian)):
+```clojure
+(require '[clojure.data.fressian :as fress])
+(vector? (fress/read (fress/write [])))
+=> false
+```
+
+`com.github.ivarref.gen-fn/with-fressian` provides a fixture that
+you may use if you want to fressian-ize all your inputs to `datomic.api/transact`:
+
+```clojure
+(ns my-test
+  (:require [clojure.test :refer [deftest is] :as test]
+            [com.github.ivarref.gen-fn :as gen-fn]
+  ...))
+
+(test/use-fixtures :each gen-fn/with-fressian)
+
+```
+
+## Change log
+
+### 2022-05-19
+
+## License
+
+Copyright © 2022 Ivar Refsdal
+
+This program and the accompanying materials are made available under the
+terms of the Eclipse Public License 2.0 which is available at
+http://www.eclipse.org/legal/epl-2.0.
+
+This Source Code may also be made available under the following Secondary
+Licenses when the conditions for such availability set forth in the Eclipse
+Public License, v. 2.0 are satisfied: GNU General Public License as published by
+the Free Software Foundation, either version 2 of the License, or (at your
+option) any later version, with the GNU Classpath Exception which is available
+at https://www.gnu.org/software/classpath/license.html.

@@ -6,13 +6,17 @@
             [clojure.data.fressian :as fress]))
 
 (defn fressian-ize [tx-data]
-  (fress/read (fress/write tx-data)))
+  (try
+    (fress/read (fress/write tx-data))
+    (catch Exception _
+      tx-data)))
 
-(defn transact [org-transact conn tx-data]
-  (org-transact conn (fressian-ize tx-data)))
+(defn transact [org-transact]
+  (fn [conn tx-data]
+    (org-transact conn (fressian-ize tx-data))))
 
 (defn with-fressian [f]
-  (with-redefs [d/transact (partial transact d/transact)]
+  (with-redefs [d/transact (transact d/transact)]
     (f)))
 
 (defn find-fns [start-pos]

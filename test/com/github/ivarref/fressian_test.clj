@@ -22,10 +22,13 @@
       (finally
         (d/release conn)))))
 
-(test/use-fixtures :each with-new-conn)
+(test/use-fixtures :each (test/compose-fixtures with-new-conn gen-fn/with-fressian))
 
 (deftest fressian-test
   @(d/transact *conn* [(gen-fn/datomic-fn :vector? #'ffn/fressian)])
   @(d/transact *conn* [{:e/id "a" :db/id "res"}
                        [:vector? "res" []]])
   (is (true? (:e/bool (d/pull (d/db *conn*) [:e/bool] [:e/id "a"])))))
+
+(comment
+  (gen-fn/datomic-fn :vector? #'ffn/fressian))
