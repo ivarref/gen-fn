@@ -17,11 +17,11 @@
             :else e))
     m))
 
-(defn fressian-inner [db e arg]
+(defn my-fn-inner [db e arg]
   [[:db/add e :e/bool (vector? arg)]])
 
-(defn fressian [db e arg]
-  (fressian-inner
+(defn my-fn [db e arg]
+  (my-fn-inner
     db
     (to-clojure-types e)
     (to-clojure-types arg)))

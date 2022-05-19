@@ -110,22 +110,52 @@ An example of this difference (using [data.fressian](https://github.com/clojure/
 => false
 ```
 
-`com.github.ivarref.gen-fn/with-fressian` provides a fixture that
-you may use if you want to fressian-ize all your inputs to `datomic.api/transact`:
+`com.github.ivarref.gen-fn/fressian-ize` is a function that
+you may use if you want to fressian-ize your inputs:
 
 ```clojure
 (ns my-test
-  (:require [clojure.test :refer [deftest is] :as test]
-            [com.github.ivarref.gen-fn :as gen-fn]
+  (:require [com.github.ivarref.gen-fn :as gen-fn]
   ...))
 
-(test/use-fixtures :each gen-fn/with-fressian)
-
+@(d/transact conn (gen-fn/fressian-ize tx-data))
 ```
 
-## Change log
+How I usually solve this problem is by converting all parameters
+to proper Clojure types:
 
-### 2022-05-19
+```clojure
+(ns ...
+  (:require [clojure.walk :as walk])
+  (:import (java.util HashSet List)))
+
+(defn to-clojure-types [m]
+  (walk/prewalk
+    (fn [e]
+      (cond (instance? String e)
+            e
+
+            (instance? HashSet e)
+            (into #{} e)
+
+            (and (instance? List e) (not (vector? e)))
+            (vec e)
+
+            :else e))
+    m))
+
+(defn my-fn-inner [db e arg]
+  ...actual code)
+
+(defn my-fn [db e arg]
+  (my-fn-inner
+    db
+    (to-clojure-types e)
+    (to-clojure-types arg)))
+```
+
+
+## Change log
 
 ## License
 

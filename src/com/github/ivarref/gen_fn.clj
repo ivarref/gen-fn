@@ -1,23 +1,20 @@
 (ns com.github.ivarref.gen-fn
-  (:require [datomic.api :as d]
+  (:require [datomic.api]
             [rewrite-clj.zip :as z]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [clojure.data.fressian :as fress]))
 
 (defn fressian-ize [tx-data]
-  (try
-    (fress/read (fress/write tx-data))
-    (catch Exception _
-      tx-data)))
+  (fress/read (fress/write tx-data)))
 
-(defn transact [org-transact]
-  (fn [conn tx-data]
-    (org-transact conn (fressian-ize tx-data))))
+#_(defn transact [org-transact]
+    (fn [conn tx-data]
+      (org-transact conn (fressian-ize tx-data))))
 
-(defn with-fressian [f]
-  (with-redefs [d/transact (transact d/transact)]
-    (f)))
+#_(defn with-fressian [f]
+    (with-redefs [d/transact (transact d/transact)]
+      (f)))
 
 (defn find-fns [start-pos]
   (loop [pos start-pos
