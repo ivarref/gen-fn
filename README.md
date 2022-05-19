@@ -8,7 +8,7 @@ Generate Datomic function literals from regular Clojure namespaces. On-prem.
 
 ## 2-minute example
 
-### Add a namespace that will contain the generated Datomic function literals
+*Add a namespace that will contain the generated Datomic function literals:*
 
 ```clojure
 (ns com.github.ivarref.generated
@@ -28,7 +28,7 @@ Generate Datomic function literals from regular Clojure namespaces. On-prem.
         (vals generated)))
 ```
 
-### Add a namespace containing the function you would like to run on the transactor
+*Add a namespace containing the function you would like to run on the transactor:*
 ```clojure
 (ns com.github.ivarref.my-add
   (:require [datomic.api :as d]))
@@ -44,7 +44,7 @@ Generate Datomic function literals from regular Clojure namespaces. On-prem.
   [[:db/add e a (+ (curr-val db e a) v)]])
 ```
 
-### Generate the Datomic function literal
+*Generate the Datomic function literal:*
  
 ```clojure
 (require '[com.github.ivarref.gen-fn :refer [gen-fn!]])
