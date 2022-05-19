@@ -1,5 +1,5 @@
 {:deps    {org.clojure/clojure       {:mvn/version "1.11.1"}
-           rewrite-clj/rewrite-clj   {:mvn/version "1.0.767-alpha"}
+           rewrite-clj/rewrite-clj   {:mvn/version "0.6.1"} ; 1.0.767-alpha
            org.clojure/data.fressian {:mvn/version "1.0.0"}}
 
  :paths   ["src"]

@@ -121,15 +121,16 @@
                           (z/right)
                           (z/assoc db-fn-name fn-str)
                           (z/find-value z/next db-fn-name))]
-    (if (or
-          (nil? (z/left* patched-value))
-          (and (z/whitespace? (z/left* patched-value))
-               (z/whitespace? (z/left* (z/left* patched-value)))))
-      (z/root-string patched-value)
-      (-> patched-value
-          (z/insert-newline-left)
-          (z/insert-space-left 16)
-          (z/root-string)))))
+    (z/root-string patched-value)
+    #_(if (or
+            (nil? (z/left* patched-value))
+            (and (z/whitespace? (z/left* patched-value))
+                 (z/whitespace? (z/left* (z/left* patched-value)))))
+        (z/root-string patched-value)
+        (-> patched-value
+            (z/insert-newline-left)
+            (z/insert-space-left 16)
+            (z/root-string)))))
 
 (defonce lock (Object.))
 
