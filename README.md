@@ -55,6 +55,7 @@ Generate the Datomic function literal:
 
 You can now see the following contents in the generated namespace (formatting added):
 ```clojure
+; Generated code below, do not edit:
 (def generated {:my-add "
 {:db/ident :my-add 
  :db/fn #db/fn {:lang \"clojure\", 
@@ -67,6 +68,7 @@ You can now see the following contents in the generated namespace (formatting ad
                                                    :where [?e ?a ?v]])
                                                    db e a)))]
            (do [[:db/add e a (+ (curr-val db e a) v)]])))}}"})
+; End of generated code
 ```
 
 You can see that:
