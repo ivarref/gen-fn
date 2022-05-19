@@ -132,7 +132,8 @@
             (z/insert-space-left 16)
             (z/root-string)))))
 
-(defn datomic-fn [db-fn-name fn-var])
+(defn datomic-fn [db-fn-name fn-var]
+  (read-dbfn (file-str->datomic-fn-str (var->file-str fn-var) db-fn-name)))
 
 (defonce lock (Object.))
 

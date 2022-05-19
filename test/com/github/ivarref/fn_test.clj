@@ -1,4 +1,4 @@
-(ns com.github.ivarref.fn-tst
+(ns com.github.ivarref.fn-test
   (:require [clojure.test :refer [use-fixtures deftest is]]
             [datomic.api :as d]
             [com.github.ivarref.gen-fn :as gen-fn]
@@ -73,7 +73,7 @@
   (is (= 2 (attr :e/res [:e/id "a"]))))
 
 (deftest gen-fn
-  (transact! [(fn-str (gen-fn/var->file-str #'my-add/my-add) :my-add)])
+  (transact! [(gen-fn/datomic-fn :my-add #'my-add/my-add)])
   (transact! [{:e/id "a" :e/res 1}])
   (transact! [[:my-add [:e/id "a"] :e/res 2]])
   (is (= 3 (attr :e/res [:e/id "a"]))))

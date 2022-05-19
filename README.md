@@ -1,6 +1,6 @@
 # gen-fn
 
-Generate Datomic function literals from regular Clojure namespaces.
+Generate Datomic function literals from regular Clojure namespaces. On-prem.
 
 ## Installation
 
@@ -75,13 +75,21 @@ You can see that:
 * `defn` bodies are wrapped in `do` in case you need side effects for debugging.
 * `def`s are inlined in the top `let`. No `def`s are used in the example namespace, thus this top `let` is empty.
 
-## Test usage
+## Test and development usage
 
 One advantage of writing Datomic database functions using regular Clojure
 code is that you may test them using plain Clojure.
 
-If you'd like to test the function in an actual database setting, you may use
+If however you'd like to test the function in an actual database setting, you may use
 the following if you'd like to avoid a hard dependency on generated files:
-```clojure
 
+```clojure
+(require '[com.github.ivarref.gen-fn :refer [datomic-fn]])
+(require '[com.github.ivarref.my-add :refer [my-add]])
+
+...
+@(d/transact conn [(datomic-fn :my-add #'my-add)])
+
+...
+@(d/transact conn [[:my-add some-eid attr value-to-add]])
 ```
