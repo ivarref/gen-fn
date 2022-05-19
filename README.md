@@ -93,3 +93,6 @@ the following if you'd like to avoid a hard dependency on generated files:
 ...
 @(d/transact conn [[:my-add some-eid attr value-to-add]])
 ```
+
+### Tips and tricks: fressian serialization and deserialization
+
