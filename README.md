@@ -158,6 +158,12 @@ to proper Clojure types:
     (to-clojure-types arg)))
 ```
 
+## Limitations
+
+Only a single namespace per database function is supported, i.e.
+the database function must be contained in a single namespace. It may
+refer code that already exists on the transactor classpath.
+
 ## Change log
 
 ## License
