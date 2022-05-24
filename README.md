@@ -169,6 +169,9 @@ transactor if you need to add or change a function.
 
 ## Change log
 
+#### 0.1.30
+First publicly announced release.
+
 ## License
 
 Copyright © 2022 Ivar Refsdal
