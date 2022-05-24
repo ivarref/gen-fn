@@ -169,7 +169,15 @@ transactor if you need to add or change a function.
 
 ## Change log
 
-#### 0.1.30
+#### 0.1.33 - 2022-05-24
+Add optional keyword argument `:reset?` to `gen-fn`.
+If `:reset?` is set to true, it will clear the generated map
+before associng the given function. Example usage:
+```clojure
+(gen-fn! :my-add #'my-add output-file :reset? true)
+```
+
+#### 0.1.30 - 2022-05-24
 First publicly announced release.
 
 ## License
