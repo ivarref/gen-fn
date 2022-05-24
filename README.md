@@ -4,9 +4,7 @@ Generate Datomic function literals from regular Clojure namespaces. On-prem.
 
 ## Installation
 
-```
-com.github.ivarref/gen-fn {:git/url "https://github.com/ivarref/gen-fn.git" :git/sha "a77f20e028b71cc2f3de9fd246af9b54eba557d2"}
-```
+[![Clojars Project](https://img.shields.io/clojars/v/com.github.ivarref/gen-fn.svg)](https://clojars.org/com.github.ivarref/gen-fn)
 
 ## 2-minute example
 
