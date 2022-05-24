@@ -3,7 +3,9 @@
            org.clojure/data.fressian {:mvn/version "1.0.0"}}
 
  :paths   ["src"]
- :aliases {:test {:extra-paths ["test" "test-resources"]
+ :aliases {:build {:deps {com.github.liquidz/build.edn {:git/tag "0.2.63" :git/sha "f4e571d"}}
+                   :ns-default build-edn.main}
+           :test {:extra-paths ["test" "test-resources"]
                   :extra-deps  {com.datomic/datomic-pro              {:mvn/version "1.0.6397"}
                                 org.slf4j/slf4j-simple               {:mvn/version "1.7.36"}
                                 org.postgresql/postgresql            {:mvn/version "9.3-1102-jdbc41"}

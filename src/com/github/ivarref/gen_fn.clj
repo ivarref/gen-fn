@@ -1,9 +1,9 @@
 (ns com.github.ivarref.gen-fn
-  (:require [datomic.api]
-            [rewrite-clj.zip :as z]
+  (:require [clojure.data.fressian :as fress]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
-            [clojure.data.fressian :as fress]))
+            [datomic.api]
+            [rewrite-clj.zip :as z]))
 
 (defn fressian-ize [tx-data]
   (fress/read (fress/write tx-data)))
