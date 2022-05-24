@@ -125,11 +125,16 @@
     out-str))
 
 
-(defn patch-string [gen-str db-fn-name fn-str]
-  (let [patched-value (-> (z/of-string gen-str)
+(defn patch-string [gen-str db-fn-name fn-str reset?]
+  (let [maybe-replace (fn [node]
+                        (if reset?
+                          (z/replace node {})
+                          node))
+        patched-value (-> (z/of-string gen-str)
                           (z/find-value z/next 'def)
                           (z/right)
                           (z/right)
+                          (maybe-replace)
                           (z/assoc db-fn-name fn-str)
                           (z/find-value z/next db-fn-name))]
     (z/root-string patched-value)
@@ -148,13 +153,13 @@
 
 (defonce lock (Object.))
 
-(defn gen-fn! [db-fn-name fn-var output-file]
+(defn gen-fn! [db-fn-name fn-var output-file & {:keys [reset?] :or {reset? false}}]
   (assert (var? fn-var) "fn-var must be variable")
   (assert (keyword? db-fn-name) "db-fn-name must be keyword")
   (assert (string? output-file) "output-file must be a string")
   (let [fn-str (file-str->datomic-fn-str (var->file-str fn-var) db-fn-name)]
     (locking lock
       (let [org-file-content (slurp output-file)
-            new-file-content (patch-string org-file-content db-fn-name fn-str)]
+            new-file-content (patch-string org-file-content db-fn-name fn-str reset?)]
         (spit output-file new-file-content)
         new-file-content))))

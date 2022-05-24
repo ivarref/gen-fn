@@ -3,7 +3,7 @@
             [datomic.api]))
 
 ; Generated code below, do not edit:
-(def generated {})
+(def generated {:old-stuff "asdf"})
 ; End of generated code
 
 (def schema
