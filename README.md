@@ -164,6 +164,11 @@ Only a single namespace per database function is supported, i.e.
 the database function must be contained in a single namespace. It may
 refer code that already exists on the transactor classpath.
 
+## Alternatives
+
+There is also [classpath functions](https://docs.datomic.com/on-prem/reference/database-functions.html#classpath-functions). This means that you will need to update your
+transactor if you need to add or change a function.
+
 ## Change log
 
 ## License
