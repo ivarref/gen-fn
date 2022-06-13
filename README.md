@@ -169,6 +169,10 @@ transactor if you need to add or change a function.
 
 ## Change log
 
+#### 0.1.35 - 2022-06-13
+
+Prettier generated files output. Thanks to [rewrite-clj](https://github.com/clj-commons/rewrite-clj).
+
 #### 0.1.33 - 2022-05-24
 Add optional keyword argument `:reset?` to `gen-fn`.
 If `:reset?` is set to true, it will clear the generated map
