@@ -39,8 +39,8 @@
 
 (defn read-dbfn [s]
   (edn/read-string
-    {:readers {'db/id  datomic.db/id-literal
-               'db/fn  datomic.function/construct}}
+    {:readers {'db/id datomic.db/id-literal
+               'db/fn datomic.function/construct}}
     s))
 
 (defn fn-remove-docstring [fn-def]
@@ -137,16 +137,15 @@
                           (maybe-replace)
                           (z/assoc db-fn-name fn-str)
                           (z/find-value z/next db-fn-name))]
-    (z/root-string patched-value)
-    #_(if (or
-            (nil? (z/left* patched-value))
-            (and (z/whitespace? (z/left* patched-value))
-                 (z/whitespace? (z/left* (z/left* patched-value)))))
-        (z/root-string patched-value)
-        (-> patched-value
-            (z/insert-newline-left)
-            (z/insert-space-left 16)
-            (z/root-string)))))
+    (if (or
+          (nil? (z/left* patched-value))
+          (and (z/whitespace? (z/left* patched-value))
+               (z/whitespace? (z/left* (z/left* patched-value)))))
+      (z/root-string patched-value)
+      (-> patched-value
+          (z/insert-newline-left)
+          (z/insert-space-left 16)
+          (z/root-string)))))
 
 (defn datomic-fn [db-fn-name fn-var]
   (read-dbfn (file-str->datomic-fn-str (var->file-str fn-var) db-fn-name)))

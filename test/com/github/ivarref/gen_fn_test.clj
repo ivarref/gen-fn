@@ -9,5 +9,5 @@
 (deftest gen-fn-test
   (spit output-file (slurp "test/com/github/ivarref/generated.txt"))
   (gen-fn! :my-add #'my-add output-file :reset? true)
-  #_(gen-fn! #'my-add :my-add-2 output-file)
+  (gen-fn! :my-add-2 #'my-add output-file)
   #_(gen-fn! #'my-add :my-add-3 output-file))
