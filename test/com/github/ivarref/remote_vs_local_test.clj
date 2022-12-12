@@ -3,6 +3,7 @@
     [clojure.edn :as edn]
     [clojure.test :refer [deftest is]]
     [com.github.sikt-no.datomic-testcontainers :as dtc]
+    [com.github.ivarref.gen-fn :as gen-fn]
     [datomic.api :as d])
   (:import (clojure.lang PersistentQueue)
            (java.util.concurrent ExecutionException)))
@@ -82,3 +83,28 @@
     (assert-is-same "clojure.lang.PersistentArrayMap" {})
     (assert-is-same "clojure.lang.PersistentArrayMap" {:a 123})
     (assert-is-same "datomic.db.DbId" (d/tempid :my-part))))
+
+(defn get-class-2 [conn what]
+  @(d/transact conn [#:db{:ident :e/id, :cardinality :db.cardinality/one, :valueType :db.type/string, :unique :db.unique/identity}
+                     #:db{:ident :e/clazz, :cardinality :db.cardinality/one, :valueType :db.type/string}])
+  (let [v (gen-fn/read-dbfn
+            (gen-fn/file-str->datomic-fn-str
+              "(ns some-ns)
+               (defn my-fn [db t]
+                 [[:db/add \"res\" :e/clazz (.getName (.getClass t))]])"
+              :get-clazz))]
+    (println "generating function... OK")
+    @(d/transact conn v))
+  (println "ok transact!")
+  @(d/transact conn [{:db/id "res" :e/id "1"} [:get-clazz what]])
+  (ensure-partition! conn :my-part)
+  (:e/clazz (d/pull (d/db conn) [:e/clazz] [:e/id "1"])))
+
+
+(deftest coerce-argument-test
+  (let [in-mem (let [uri (str "datomic:mem://test-" (random-uuid))]
+                 (d/delete-database uri)
+                 (d/create-database uri)
+                 (d/connect uri))]
+    (println (get-class-2 in-mem [1 2 3]))
+    #_(assert-is-same "clojure.lang.PersistentVector" [1 2 3])))

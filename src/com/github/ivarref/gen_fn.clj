@@ -8,14 +8,6 @@
 (defn fressian-ize [tx-data]
   (fress/read (fress/write tx-data)))
 
-#_(defn transact [org-transact]
-    (fn [conn tx-data]
-      (org-transact conn (fressian-ize tx-data))))
-
-#_(defn with-fressian [f]
-    (with-redefs [d/transact (transact d/transact)]
-      (f)))
-
 (defn find-fns [start-pos]
   (loop [pos start-pos
          fns []]
@@ -62,10 +54,8 @@
       (slurp slurpable))
     (throw (ex-info "No :file for variable" {:var v}))))
 
-
-(defn file-str->datomic-fn-str [clj-file-str db-fn-name]
+(defn file-str->datomic-fn-map [clj-file-str]
   (assert (string? clj-file-str) "clj-file-str must be string")
-  (assert (keyword? db-fn-name) "db-fn-name must be keyword")
   (let [fil (z/of-string clj-file-str)
         requires (-> fil
                      (z/find-value z/next 'ns)
@@ -105,14 +95,47 @@
                                (list
                                  'let all-defs
                                  (list 'letfn other-defns
-                                       (apply list 'do n)))))
+                                       (list 'let ['genfn-coerce-arg
+                                                   'identity #_(fn [~'x]
+                                                                 (clojure.walk/prewalk
+                                                                   (fn [~'e]
+                                                                     ~'e
+                                                                     #_(cond (instance? String ~'e)
+                                                                             ~'e
+
+                                                                             (instance? java.util.HashSet ~'e)
+                                                                             (into #{} ~'e)
+
+                                                                             (and (instance? java.util.List ~'e) (not (vector? ~'e)))
+                                                                             (vec ~'e)
+
+                                                                             :else
+                                                                             ~'e))
+                                                                   ~'x))]
+                                             (list 'let
+                                                   []  #_(mapv (fn [param]
+                                                                 [param (list 'genfn-coerce-arg param)])
+                                                               params)
+                                               (apply list 'do n)))))))
                      (z/sexpr))
         db-fn {:lang     "clojure"
                :requires (vec (drop 1 requires))
                :imports  (vec (drop 1 imports))
                :params   params
-               :code     code}
-        out-str (str "{:db/ident " db-fn-name
+               :code     code}]
+    db-fn))
+
+(comment
+  (:code
+    (file-str->datomic-fn-map
+      "(ns com.github.ivarref.gen-fn)
+       (defn xyz [] (+ 1))
+       (defn my-fn [a b] (+ a b))")))
+
+(defn file-str->datomic-fn-str [clj-file-str db-fn-name]
+  (assert (string? clj-file-str) "clj-file-str must be string")
+  (assert (keyword? db-fn-name) "db-fn-name must be keyword")
+  (let [out-str (str "{:db/ident " db-fn-name
                      " :db/fn #db/fn "
                      (binding [*print-dup* false
                                *print-meta* false
@@ -120,10 +143,9 @@
                                *print-length* nil
                                *print-level* nil
                                *print-namespace-maps* false]
-                       (pr-str db-fn))
+                       (pr-str (file-str->datomic-fn-map clj-file-str)))
                      "}")]
     out-str))
-
 
 (defn patch-string [gen-str db-fn-name fn-str reset?]
   (let [maybe-replace (fn [node]
