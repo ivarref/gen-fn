@@ -118,9 +118,16 @@
     (assert-is-same "clojure.lang.PersistentVector" [])
     (assert-is-same "clojure.lang.PersistentHashSet" #{})
     (assert-is-same "clojure.lang.PersistentHashSet" #{1 2 3})
+    (assert-is-same "java.lang.Long" 1)
 
     (is (thrown? Exception (get-class-coerced in-mem (sorted-map))))
     (is (thrown? Exception (get-class-coerced in-mem (sorted-map :a 1))))
     (is (thrown? Exception (get-class-coerced in-mem (list 1 2 3))))
     (is (thrown? Exception (get-class-coerced in-mem (list))))
-    (is (thrown? Exception (get-class-coerced in-mem PersistentQueue/EMPTY)))))
+    (is (thrown? Exception (get-class-coerced in-mem PersistentQueue/EMPTY)))
+
+    (assert-is-same "java.util.Date" #inst"2020")
+    (assert-is-same "clojure.lang.Symbol" 'some-symbol)
+    (assert-is-same "clojure.lang.PersistentArrayMap" {})
+    (assert-is-same "clojure.lang.PersistentArrayMap" {:a 123})
+    (assert-is-same "datomic.db.DbId" (d/tempid :my-part))))

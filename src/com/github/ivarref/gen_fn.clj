@@ -4,7 +4,7 @@
             [clojure.java.io :as io]
             [datomic.api]
             [rewrite-clj.zip :as z])
-  (:import (clojure.lang PersistentList$EmptyList)))
+  (:import (clojure.lang PersistentList PersistentList$EmptyList)))
 
 (defn fressian-ize [tx-data]
   (fress/read (fress/write tx-data)))
@@ -102,7 +102,8 @@
                                                         (fn [~'e]
                                                           (when (instance? clojure.lang.PersistentTreeMap ~'e)
                                                             (throw (ex-info "Using sorted-map will cause different types in transactor for in-mem and remote" {:val ~'e})))
-                                                          (when (instance? clojure.lang.PersistentList ~'e)
+                                                          (when (or (= PersistentList$EmptyList (.getClass ~'e))
+                                                                    (instance? clojure.lang.PersistentList ~'e))
                                                             (throw (ex-info "Using list will cause indistinguishable types in transactor for in-mem and remote" {:val ~'e})))
                                                           (when (instance? clojure.lang.PersistentQueue ~'e)
                                                             (throw (ex-info "Using clojure.lang.PersistentQueue does not work for remote transactor" {:val ~'e})))
