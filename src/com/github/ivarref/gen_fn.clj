@@ -3,7 +3,8 @@
             [clojure.edn :as edn]
             [clojure.java.io :as io]
             [datomic.api]
-            [rewrite-clj.zip :as z]))
+            [rewrite-clj.zip :as z])
+  (:import (clojure.lang PersistentList$EmptyList)))
 
 (defn fressian-ize [tx-data]
   (fress/read (fress/write tx-data)))
@@ -99,24 +100,25 @@
                                                    `(fn [~'x]
                                                       (clojure.walk/prewalk
                                                         (fn [~'e]
-                                                          (println "hello")
-                                                          ~'e
-                                                          #_(cond (instance? String ~'e)
-                                                                  ~'e
+                                                          (when (instance? clojure.lang.PersistentTreeMap ~'e)
+                                                            (throw (ex-info "Using sorted-map will cause different types in transactor for in-mem and remote" {:val ~'e})))
+                                                          (when (instance? clojure.lang.PersistentList ~'e)
+                                                            (throw (ex-info "Using list will cause indistinguishable types in transactor for in-mem and remote" {:val ~'e})))
+                                                          (when (instance? clojure.lang.PersistentQueue ~'e)
+                                                            (throw (ex-info "Using clojure.lang.PersistentQueue does not work for remote transactor" {:val ~'e})))
+                                                          (cond (instance? java.util.HashSet ~'e)
+                                                                (into #{} ~'e)
 
-                                                                  (instance? java.util.HashSet ~'e)
-                                                                  (into #{} ~'e)
+                                                                (and (instance? java.util.List ~'e) (not (vector? ~'e)))
+                                                                (vec ~'e)
 
-                                                                  (and (instance? java.util.List ~'e) (not (vector? ~'e)))
-                                                                  (vec ~'e)
-
-                                                                  :else
-                                                                  ~'e))
+                                                                :else
+                                                                ~'e))
                                                         ~'x))]
                                              (list 'let
-                                                   [] #_(vec (mapcat (fn [param]
-                                                                      [param (list 'genfn-coerce-arg param)])
-                                                                   params))
+                                                   (vec (mapcat (fn [param]
+                                                                 [param (list 'genfn-coerce-arg param)])
+                                                              (drop 1 params)))
                                                    (apply list 'do n)))))))
                      (z/sexpr))
         db-fn {:lang     "clojure"

@@ -51,7 +51,7 @@
                            [:db/add :db.part/db :db.install/partition "new-part"]])
         [:tempids "new-part"]))))
 
-(defn get-class [conn what]
+(defn get-class-raw [conn what]
   @(d/transact conn schema)
   @(d/transact conn dbfn-schema)
   @(d/transact conn [{:db/id "res" :e/id "1"} [:get-clazz what]])
@@ -62,11 +62,11 @@
   (let [remote (dtc/get-conn {:delete? true})
         in-mem (empty-conn)
         remote-local (fn [what]
-                       [(get-class remote what)
-                        (get-class in-mem what)])
+                       [(get-class-raw remote what)
+                        (get-class-raw in-mem what)])
         assert-is-same (fn [expected what]
-                         (let [remote-class (get-class remote what)
-                               in-mem-class (get-class in-mem what)
+                         (let [remote-class (get-class-raw remote what)
+                               in-mem-class (get-class-raw in-mem what)
                                err-msg (str "Expected " what " to be identical in remote "
                                             remote-class
                                             " and in-memory "
@@ -78,12 +78,13 @@
                                (println err-msg)))))]
     (is (= ["java.util.Arrays$ArrayList" "clojure.lang.PersistentVector"] (remote-local [1 2 3])))
     (is (= ["java.util.Arrays$ArrayList" "clojure.lang.PersistentVector"] (remote-local [])))
+    (is (= ["java.util.Arrays$ArrayList" "clojure.lang.PersistentList$EmptyList"] (remote-local (list))))
     (is (= ["java.util.Arrays$ArrayList" "clojure.lang.PersistentList"] (remote-local (list 1 2 3))))
     (is (= ["java.util.HashSet" "clojure.lang.PersistentHashSet"] (remote-local #{})))
     (is (= ["clojure.lang.PersistentArrayMap" "clojure.lang.PersistentTreeMap"] (remote-local (sorted-map :a 123))))
 
-    (is (thrown? ExecutionException (get-class remote PersistentQueue/EMPTY)))
-    (is (= "clojure.lang.PersistentQueue" (get-class in-mem PersistentQueue/EMPTY)))
+    (is (thrown? ExecutionException (get-class-raw remote PersistentQueue/EMPTY)))
+    (is (= "clojure.lang.PersistentQueue" (get-class-raw in-mem PersistentQueue/EMPTY)))
 
     (assert-is-same "java.util.Date" #inst"2020")
     (assert-is-same "clojure.lang.Symbol" 'some-symbol)
@@ -104,21 +105,22 @@
   @(d/transact conn [db-fn])
   @(d/transact conn [{:db/id "res" :e/id "1"} [:get-clazz what]])
   (ensure-partition! conn :my-part)
-  (d/pull (d/db conn) [:e/clazz :e/debug] [:e/id "1"]))
+  (:e/clazz (d/pull (d/db conn) [:e/clazz :e/debug] [:e/id "1"])))
 
 (deftest coerce-argument-test
   (let [in-mem (empty-conn)
         remote (dtc/get-conn {:db-name "coerce-test" :delete? true})
         assert-is-same (fn [expected what]
-                         (let [remote-class (get-class-coerced remote what)]
-                               ;in-mem-class (get-class-coerced in-mem what)]
-                           (is (= remote-class expected))))]
-    (println (get-class-coerced remote [1 2 3]))
-    #_(assert-is-same "clojure.lang.PersistentVector" [1 2 3])
-    ;(is (= ["java.util.Arrays$ArrayList" "clojure.lang.PersistentVector"]))
-    ;(is (= ["java.util.Arrays$ArrayList" "clojure.lang.PersistentVector"] (remote-local [])))
-    ;(is (= ["java.util.Arrays$ArrayList" "clojure.lang.PersistentList"] (remote-local (list 1 2 3))))
-    ;(is (= ["java.util.HashSet" "clojure.lang.PersistentHashSet"] (remote-local #{})))
-    ;(is (= ["clojure.lang.PersistentArrayMap" "clojure.lang.PersistentTreeMap"] (remote-local (sorted-map :a 123))))
-    ;(println (get-class-coerced in-mem [1 2 3]))
-    #_(assert-is-same "clojure.lang.PersistentVector" [1 2 3])))
+                         (let [remote-class (get-class-coerced remote what)
+                               in-mem-class (get-class-coerced in-mem what)]
+                           (is (= remote-class in-mem-class expected))))]
+    (assert-is-same "clojure.lang.PersistentVector" [1 2 3])
+    (assert-is-same "clojure.lang.PersistentVector" [])
+    (assert-is-same "clojure.lang.PersistentHashSet" #{})
+    (assert-is-same "clojure.lang.PersistentHashSet" #{1 2 3})
+
+    (is (thrown? Exception (get-class-coerced in-mem (sorted-map))))
+    (is (thrown? Exception (get-class-coerced in-mem (sorted-map :a 1))))
+    (is (thrown? Exception (get-class-coerced in-mem (list 1 2 3))))
+    (is (thrown? Exception (get-class-coerced in-mem (list))))
+    (is (thrown? Exception (get-class-coerced in-mem PersistentQueue/EMPTY)))))
