@@ -96,27 +96,28 @@
                                  'let all-defs
                                  (list 'letfn other-defns
                                        (list 'let ['genfn-coerce-arg
-                                                   'identity #_(fn [~'x]
-                                                                 (clojure.walk/prewalk
-                                                                   (fn [~'e]
-                                                                     ~'e
-                                                                     #_(cond (instance? String ~'e)
-                                                                             ~'e
+                                                   `(fn [~'x]
+                                                      (clojure.walk/prewalk
+                                                        (fn [~'e]
+                                                          (println "hello")
+                                                          ~'e
+                                                          #_(cond (instance? String ~'e)
+                                                                  ~'e
 
-                                                                             (instance? java.util.HashSet ~'e)
-                                                                             (into #{} ~'e)
+                                                                  (instance? java.util.HashSet ~'e)
+                                                                  (into #{} ~'e)
 
-                                                                             (and (instance? java.util.List ~'e) (not (vector? ~'e)))
-                                                                             (vec ~'e)
+                                                                  (and (instance? java.util.List ~'e) (not (vector? ~'e)))
+                                                                  (vec ~'e)
 
-                                                                             :else
-                                                                             ~'e))
-                                                                   ~'x))]
+                                                                  :else
+                                                                  ~'e))
+                                                        ~'x))]
                                              (list 'let
-                                                   []  #_(mapv (fn [param]
-                                                                 [param (list 'genfn-coerce-arg param)])
-                                                               params)
-                                               (apply list 'do n)))))))
+                                                   [] #_(vec (mapcat (fn [param]
+                                                                      [param (list 'genfn-coerce-arg param)])
+                                                                   params))
+                                                   (apply list 'do n)))))))
                      (z/sexpr))
         db-fn {:lang     "clojure"
                :requires (vec (drop 1 requires))
@@ -129,8 +130,17 @@
   (:code
     (file-str->datomic-fn-map
       "(ns com.github.ivarref.gen-fn)
+       (def abc 123)
+       (def abc2 223)
        (defn xyz [] (+ 1))
        (defn my-fn [a b] (+ a b))")))
+
+(comment
+  (:code
+    (file-str->datomic-fn-map
+      "(ns some-ns)
+               (defn my-fn [db t]
+                 [[:db/add \"res\" :e/clazz (.getName (.getClass t))]])")))
 
 (defn file-str->datomic-fn-str [clj-file-str db-fn-name]
   (assert (string? clj-file-str) "clj-file-str must be string")
