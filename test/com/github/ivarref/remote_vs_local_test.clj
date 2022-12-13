@@ -2,8 +2,8 @@
   (:require
     [clojure.edn :as edn]
     [clojure.test :refer [deftest is]]
-    [com.github.sikt-no.datomic-testcontainers :as dtc]
     [com.github.ivarref.gen-fn :as gen-fn]
+    [com.github.sikt-no.datomic-testcontainers :as dtc]
     [datomic.api :as d])
   (:import (clojure.lang PersistentQueue)
            (java.util.concurrent ExecutionException)))
