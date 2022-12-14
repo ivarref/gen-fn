@@ -62,12 +62,36 @@ You can now see the following contents in the generated namespace (formatting ad
                :requires [[datomic.api :as d]], 
                :imports [], 
                :params [db e a v], 
-               :code (let [] 
-                        (letfn [(curr-val [db e a] (do (d/q (quote [:find ?v . 
-                                                                   :in $ ?e ?a 
-                                                                   :where [?e ?a ?v]])
-                                                                   db e a)))]
-                           (do [[:db/add e a (+ (curr-val db e a) v)]])))}}"})
+               :code (let [] (letfn [(curr-val [db e a] 
+                                       (do (d/q (quote [:find ?v . :in $ ?e ?a :where [?e ?a ?v]]) db e a)))]
+                               (let [genfn-coerce-arg (clojure.core/fn [x]
+                                 (clojure.walk/prewalk 
+                                   (clojure.core/fn [e]
+                                     (clojure.core/when (clojure.core/instance? clojure.lang.PersistentTreeMap e)
+                                     (throw (clojure.core/ex-info \"Using sorted-map will cause different types in transactor for in-mem and remote\" {:val e})))
+                                     
+                                     (clojure.core/when (clojure.core/var? e)
+                                     (throw (clojure.core/ex-info \"Using var does not work for remote transactor\" {:val e})))
+                                     
+                                     (clojure.core/when (clojure.core/or (clojure.core/= clojure.lang.PersistentList$EmptyList (.getClass e))
+                                                                         (clojure.core/instance? clojure.lang.PersistentList e))
+                                     (throw (clojure.core/ex-info \"Using list will cause indistinguishable types in transactor for in-mem and remote\" {:val e})))
+                                     
+                                     (clojure.core/when (clojure.core/instance? clojure.lang.PersistentQueue e)
+                                     (throw (clojure.core/ex-info \"Using clojure.lang.PersistentQueue does not work for remote transactor\" {:val e})))
+                                     
+                                     (clojure.core/cond
+                                       (clojure.core/instance? java.util.HashSet e)
+                                       (clojure.core/into #{} e)
+                                       
+                                       (clojure.core/and (clojure.core/instance? java.util.List e) (clojure.core/not (clojure.core/vector? e)))
+                                       (clojure.core/vec e)
+                                       
+                                       :else e)) x))]
+                                     (let [e (genfn-coerce-arg e)
+                                           a (genfn-coerce-arg a)
+                                           v (genfn-coerce-arg v)]
+                                       (do [[:db/add e a (+ (curr-val db e a) v)]])))))}}"})
 ; End of generated code
 ```
 
@@ -77,7 +101,8 @@ You can see that:
 * Other `defn`s are inlined using `letfn`.
 * `defn` bodies are wrapped in `do` in case you need side effects for debugging.
 * `def`s are inlined in the top `let`. No `def`s are used in the example namespace, thus the top `let` is empty.
-
+* Arguments are converted to "proper" Clojure types. This is to say that types will be identical in the in-memory transactor and the remote transactor.
+ 
 ## Test and development usage
 
 One advantage of writing Datomic database functions using regular Clojure
@@ -97,7 +122,7 @@ the following if you'd like to avoid a hard dependency on generated files:
 @(d/transact conn [[:my-add some-eid attr value-to-add]])
 ```
 
-### Tips and tricks: fressian serialization and deserialization
+### Note: fressian serialization and deserialization
 
 One thing that may surprise you is that parameters may be 
 slightly different on an in-memory transactor and on a remote transactor.
@@ -105,56 +130,8 @@ This is due to tx-data being serialized and deserialized using
 [fressian](https://github.com/Datomic/fressian) only when using
 a remote transactor.
 
-An example of this difference (using [data.fressian](https://github.com/clojure/data.fressian)):
-```clojure
-(require '[clojure.data.fressian :as fress])
-(vector? (fress/read (fress/write [])))
-=> false
-```
-
-`com.github.ivarref.gen-fn/fressian-ize` is a function that
-you may use if you want to fressian-ize your inputs:
-
-```clojure
-(ns my-test
-  (:require [com.github.ivarref.gen-fn :as gen-fn]
-  ...))
-
-@(d/transact conn (gen-fn/fressian-ize tx-data))
-```
-
-How I usually solve this problem is by converting all parameters
-to proper Clojure types:
-
-```clojure
-(ns my-db-fn
-  (:require [clojure.walk :as walk])
-  (:import (java.util HashSet List)))
-
-(defn to-clojure-types [m]
-  (walk/prewalk
-    (fn [e]
-      (cond (instance? String e)
-            e
-
-            (instance? HashSet e)
-            (into #{} e)
-
-            (and (instance? List e) (not (vector? e)))
-            (vec e)
-
-            :else e))
-    m))
-
-(defn my-fn-inner [db e arg]
-  ...actual code)
-
-(defn my-fn [db e arg]
-  (my-fn-inner
-    db
-    (to-clojure-types e)
-    (to-clojure-types arg)))
-```
+As can be seen by the example above, `gen-fn` will write functions that
+automatically handles this for you.
 
 ## Limitations
 
@@ -168,6 +145,9 @@ There is also [classpath functions](https://docs.datomic.com/on-prem/reference/d
 transactor if you need to add or change a function.
 
 ## Change log
+
+#### 0.2.45 - 2022-12-14
+Added auto conversion to "proper" Clojure types.
 
 #### 0.1.35 - 2022-06-13
 

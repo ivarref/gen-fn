@@ -125,6 +125,7 @@
     (is (thrown? Exception (get-class-coerced in-mem (list 1 2 3))))
     (is (thrown? Exception (get-class-coerced in-mem (list))))
     (is (thrown? Exception (get-class-coerced in-mem PersistentQueue/EMPTY)))
+    (is (thrown? Exception (get-class-coerced in-mem #'get-class-coerced)))
 
     (assert-is-same "java.util.Date" #inst"2020")
     (assert-is-same "clojure.lang.Symbol" 'some-symbol)

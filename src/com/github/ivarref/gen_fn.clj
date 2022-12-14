@@ -2,9 +2,10 @@
   (:require [clojure.data.fressian :as fress]
             [clojure.edn :as edn]
             [clojure.java.io :as io]
+            [datomic.api :as d]
             [datomic.api]
             [rewrite-clj.zip :as z])
-  (:import (clojure.lang PersistentList PersistentList$EmptyList)))
+  (:import (clojure.lang PersistentList$EmptyList)))
 
 (defn fressian-ize [tx-data]
   (fress/read (fress/write tx-data)))
@@ -102,6 +103,8 @@
                                                         (fn [~'e]
                                                           (when (instance? clojure.lang.PersistentTreeMap ~'e)
                                                             (throw (ex-info "Using sorted-map will cause different types in transactor for in-mem and remote" {:val ~'e})))
+                                                          (when (var? ~'e)
+                                                            (throw (ex-info "Using var does not work for remote transactor" {:val ~'e})))
                                                           (when (or (= PersistentList$EmptyList (.getClass ~'e))
                                                                     (instance? clojure.lang.PersistentList ~'e))
                                                             (throw (ex-info "Using list will cause indistinguishable types in transactor for in-mem and remote" {:val ~'e})))
@@ -118,8 +121,8 @@
                                                         ~'x))]
                                              (list 'let
                                                    (vec (mapcat (fn [param]
-                                                                 [param (list 'genfn-coerce-arg param)])
-                                                              (drop 1 params)))
+                                                                  [param (list 'genfn-coerce-arg param)])
+                                                                (drop 1 params)))
                                                    (apply list 'do n)))))))
                      (z/sexpr))
         db-fn {:lang     "clojure"
@@ -186,6 +189,20 @@
   (read-dbfn (file-str->datomic-fn-str (var->file-str fn-var) db-fn-name)))
 
 (defonce lock (Object.))
+
+(defn fn-var->keyword [fn-var]
+  (assert (var? fn-var) "fn-var must be variable")
+  (or
+    (:db/ident (meta fn-var))
+    (keyword (str (:ns (meta fn-var))) (name (:name (meta fn-var))))))
+
+(defn gen-fn-str
+  [fn-var]
+  (assert (var? fn-var) "fn-var must be variable")
+  (datomic-fn (fn-var->keyword fn-var) fn-var))
+
+(defn install-fn! [conn fn-var]
+  @(d/transact conn [(gen-fn-str fn-var)]))
 
 (defn gen-fn! [db-fn-name fn-var output-file & {:keys [reset?] :or {reset? false}}]
   (assert (var? fn-var) "fn-var must be variable")
