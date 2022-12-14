@@ -67,27 +67,31 @@ You can now see the following contents in the generated namespace (formatting ad
                                (let [genfn-coerce-arg (clojure.core/fn [x]
                                  (clojure.walk/prewalk 
                                    (clojure.core/fn [e]
-                                     (clojure.core/when (clojure.core/instance? clojure.lang.PersistentTreeMap e)
-                                     (throw (clojure.core/ex-info \"Using sorted-map will cause different types in transactor for in-mem and remote\" {:val e})))
-                                     
-                                     (clojure.core/when (clojure.core/var? e)
-                                     (throw (clojure.core/ex-info \"Using var does not work for remote transactor\" {:val e})))
-                                     
-                                     (clojure.core/when (clojure.core/or (clojure.core/= clojure.lang.PersistentList$EmptyList (.getClass e))
-                                                                         (clojure.core/instance? clojure.lang.PersistentList e))
-                                     (throw (clojure.core/ex-info \"Using list will cause indistinguishable types in transactor for in-mem and remote\" {:val e})))
-                                     
-                                     (clojure.core/when (clojure.core/instance? clojure.lang.PersistentQueue e)
-                                     (throw (clojure.core/ex-info \"Using clojure.lang.PersistentQueue does not work for remote transactor\" {:val e})))
-                                     
-                                     (clojure.core/cond
-                                       (clojure.core/instance? java.util.HashSet e)
-                                       (clojure.core/into #{} e)
-                                       
-                                       (clojure.core/and (clojure.core/instance? java.util.List e) (clojure.core/not (clojure.core/vector? e)))
-                                       (clojure.core/vec e)
-                                       
-                                       :else e)) x))]
+                                     (if (some? e)
+                                         (do
+                                             (clojure.core/when (clojure.core/instance? clojure.lang.PersistentTreeMap e)
+                                             (throw (clojure.core/ex-info \"Using sorted-map will cause different types in transactor for in-mem and remote\" {:val e})))
+                                             
+                                             (clojure.core/when (clojure.core/var? e)
+                                             (throw (clojure.core/ex-info \"Using var does not work for remote transactor\" {:val e})))
+                                             
+                                             (clojure.core/when (clojure.core/or (clojure.core/= clojure.lang.PersistentList$EmptyList (.getClass e))
+                                                                                 (clojure.core/instance? clojure.lang.PersistentList e))
+                                             (throw (clojure.core/ex-info \"Using list will cause indistinguishable types in transactor for in-mem and remote\" {:val e})))
+                                             
+                                             (clojure.core/when (clojure.core/instance? clojure.lang.PersistentQueue e)
+                                             (throw (clojure.core/ex-info \"Using clojure.lang.PersistentQueue does not work for remote transactor\" {:val e})))
+                                             
+                                             (clojure.core/cond
+                                               (clojure.core/instance? java.util.HashSet e)
+                                               (clojure.core/into #{} e)
+                                               
+                                               (clojure.core/and (clojure.core/instance? java.util.List e) (clojure.core/not (clojure.core/vector? e)))
+                                               (clojure.core/vec e)
+                                               
+                                               :else e))
+                                           e))
+                                     x))]
                                      (let [e (genfn-coerce-arg e)
                                            a (genfn-coerce-arg a)
                                            v (genfn-coerce-arg v)]
@@ -145,6 +149,9 @@ There is also [classpath functions](https://docs.datomic.com/on-prem/reference/d
 transactor if you need to add or change a function.
 
 ## Change log
+
+#### 0.2.46 - 2022-12-14
+Handle nil values in auto conversion.
 
 #### 0.2.45 - 2022-12-14
 Added auto conversion to "proper" Clojure types.

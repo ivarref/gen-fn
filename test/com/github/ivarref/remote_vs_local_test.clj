@@ -132,3 +132,29 @@
     (assert-is-same "clojure.lang.PersistentArrayMap" {})
     (assert-is-same "clojure.lang.PersistentArrayMap" {:a 123})
     (assert-is-same "datomic.db.DbId" (d/tempid :my-part))))
+
+(def db-fn-2 (gen-fn/read-dbfn
+               (gen-fn/file-str->datomic-fn-str
+                 "(ns some-ns)
+                (defn my-fn [db t]
+                  [[:db/add \"res\" :e/debug (str t)]])"
+                 :get-str)))
+
+(deftest coerce-works-with-nil
+  (let [in-mem (empty-conn)
+        remote (dtc/get-conn {:db-name "coerce-nil-test" :delete? true})
+        transact! (fn [what]
+                    @(d/transact in-mem what)
+                    @(d/transact remote what))
+        get-str (fn [conn what]
+                  (let [{:keys [db-after]} @(d/transact conn [{:db/id "res" :e/id "1"}
+                                                              [:get-str what]])]
+                    (:e/debug (d/pull db-after [:e/debug] [:e/id "1"]))))]
+    (transact! schema)
+    (transact! [db-fn-2])
+    (is (= (str false) (get-str in-mem false)))
+    (is (= (str false) (get-str remote false)))
+    (is (= (str true) (get-str in-mem true)))
+    (is (= (str true) (get-str remote true)))
+    (is (= (str nil) (get-str in-mem nil)))
+    (is (= (str nil) (get-str remote nil)))))

@@ -101,23 +101,26 @@
                                                    `(fn [~'x]
                                                       (clojure.walk/prewalk
                                                         (fn [~'e]
-                                                          (when (instance? clojure.lang.PersistentTreeMap ~'e)
-                                                            (throw (ex-info "Using sorted-map will cause different types in transactor for in-mem and remote" {:val ~'e})))
-                                                          (when (var? ~'e)
-                                                            (throw (ex-info "Using var does not work for remote transactor" {:val ~'e})))
-                                                          (when (or (= PersistentList$EmptyList (.getClass ~'e))
-                                                                    (instance? clojure.lang.PersistentList ~'e))
-                                                            (throw (ex-info "Using list will cause indistinguishable types in transactor for in-mem and remote" {:val ~'e})))
-                                                          (when (instance? clojure.lang.PersistentQueue ~'e)
-                                                            (throw (ex-info "Using clojure.lang.PersistentQueue does not work for remote transactor" {:val ~'e})))
-                                                          (cond (instance? java.util.HashSet ~'e)
-                                                                (into #{} ~'e)
+                                                          (if (some? ~'e)
+                                                            (do
+                                                              (when (instance? clojure.lang.PersistentTreeMap ~'e)
+                                                                (throw (ex-info "Using sorted-map will cause different types in transactor for in-mem and remote" {:val ~'e})))
+                                                              (when (var? ~'e)
+                                                                (throw (ex-info "Using var does not work for remote transactor" {:val ~'e})))
+                                                              (when (or (= PersistentList$EmptyList (.getClass ~'e))
+                                                                        (instance? clojure.lang.PersistentList ~'e))
+                                                                (throw (ex-info "Using list will cause indistinguishable types in transactor for in-mem and remote" {:val ~'e})))
+                                                              (when (instance? clojure.lang.PersistentQueue ~'e)
+                                                                (throw (ex-info "Using clojure.lang.PersistentQueue does not work for remote transactor" {:val ~'e})))
+                                                              (cond (instance? java.util.HashSet ~'e)
+                                                                    (into #{} ~'e)
 
-                                                                (and (instance? java.util.List ~'e) (not (vector? ~'e)))
-                                                                (vec ~'e)
+                                                                    (and (instance? java.util.List ~'e) (not (vector? ~'e)))
+                                                                    (vec ~'e)
 
-                                                                :else
-                                                                ~'e))
+                                                                    :else
+                                                                    ~'e))
+                                                            ~'e))
                                                         ~'x))]
                                              (list 'let
                                                    (vec (mapcat (fn [param]
@@ -203,6 +206,10 @@
 
 (defn install-fn! [conn fn-var]
   @(d/transact conn [(gen-fn-str fn-var)]))
+
+(defn exec-fn [fn-var & args]
+  (reduce into [] [[(fn-var->keyword fn-var)]
+                   (into [] args)]))
 
 (defn gen-fn! [db-fn-name fn-var output-file & {:keys [reset?] :or {reset? false}}]
   (assert (var? fn-var) "fn-var must be variable")
